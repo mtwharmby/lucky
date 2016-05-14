@@ -27,3 +27,10 @@ class TestIntegrationConfig(object):
         self.iConf.window = 300
         
         assert_raises(LuckyConfigException, self.iConf.checkConfig)
+
+    def test_window_too_wide(self):
+        self.iConf.start = 200
+        self.iConf.end = 900
+        self.iConf.window = 1000
+        
+        assert_raises(LuckyConfigException, self.iConf.checkConfig)
