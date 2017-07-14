@@ -4,6 +4,7 @@ Created on 4 Nov 2015
 @author: wnm24546
 '''
 
+#TODO QDialog has gone away in PyQt5 - what replaces it???
 from PyQt4.QtGui import (QDialog, QDialogButtonBox, QGridLayout, QGroupBox, QHBoxLayout, QLabel, QLineEdit, QPushButton, QFileDialog, QRadioButton, QVBoxLayout, QWidget)
 from PyQt4 import QtCore
 
