@@ -155,23 +155,12 @@ class LuckyCalculations(object): #TODO Make calcs use calcserv to get bulbTemp, 
         self.twoColData = self.twoColour(self.dataSet[0], self.dataSet[2], self.intConf[2])
         self.twoColDataLim = self.twoColData[self.intConf[0]:self.intConf[1]] #twoColData limited between the integration boundaries
         #modifica
-        print('il minimo:')
-        print(round(min(self.twoColDataLim)))
-        print(type(round(min(self.twoColDataLim))))
-        print(round(max(self.twoColDataLim), 0))
-        print(type(int(round(max(self.twoColDataLim)))))
+       
         self.a = int(round(min(self.twoColDataLim)))
         self.b = int(round(max(self.twoColDataLim)))
-        self.binning = range(self.a, self.b, 25)
+        self.binning = range(self.a, self.b, 30)
         #self.twoColHistFreq, self.twoColHistValues = np.histogram(self.twoColDataLim, bins=np.log(len(self.twoColDataLim))/np.log(2)+4], density=False)
         self.twoColHistFreq, self.twoColHistValues = np.histogram(self.twoColDataLim, bins= self.binning, density=False)
-        
-        #self.twoColHistFreq, self.twoColHistValues = np.histogram(self.twoColDataLim, density=False)
-        #self.twoColHistValues = np.delete(self.twoColHistValues, len(self.twoColHistFreq), 0)
-        print('twoColHistFreq:')
-        print self.twoColHistFreq
-        print('twoColHistValues:')
-        print self.twoColHistValues
         
         #old
         #self.twoColHistFreq, self.twoColHistValues = np.histogram(self.twoColDataLim, bins=range(1500,5000,1), density=False)
@@ -208,8 +197,8 @@ class LuckyCalculations(object): #TODO Make calcs use calcserv to get bulbTemp, 
     def fitHistogram(self):
         #Gaussian fit of two colour histogram
         ###
-        print('averaged twocolhistvalues:')
-        print self.moving_average(self.twoColHistValues)
+        #print('averaged twocolhistvalues:')
+        #print self.moving_average(self.twoColHistValues)
         self.histFit, histCov = curve_fit(self.gaus, self.moving_average(self.twoColHistValues), self.twoColHistFreq, p0=[1000,self.planckTemp,100])
         self.twoColTemp = self.histFit[1]
         self.twoColErr = self.histFit[2]
