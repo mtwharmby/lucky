@@ -271,7 +271,7 @@ class LuckyPlots(object):
         self.luckyCalcs = calcs
         
         self.fig = plt.figure(self.luckyCalcs.label)
-        self.fig.suptitle(self.luckyCalcs.label, fontsize="16", weight="bold")
+        self.fig.suptitle(self.luckyCalcs.label, fontsize="16", weight="bold", color = 'b')
         self.ax1 = self.fig.add_subplot(3, 2, 1)#Raw+Calib
         self.ax2 = self.fig.add_subplot(3, 2, 3)#Planck
         self.ax3 = self.fig.add_subplot(3, 2, 4)#Wien
@@ -285,33 +285,33 @@ class LuckyPlots(object):
         plt.subplots_adjust(wspace=0.3, hspace=0.7)
         
         #One-time configuration of plots
-        self.ax1.set_title('Raw (blue) & Calibration Data (green)', fontsize='medium', style='italic')
-        self.ax1.set_xlabel('Wavelength / nm')
+        self.ax1.set_title('Raw (blue) & Calibration Data (green)', fontsize= 13, style='italic', weight="bold")
+        self.ax1.set_xlabel('Wavelength [nm]', fontsize= 13)
         self.ax1.grid(True, linestyle='-')
         
-        self.ax2.set_title('Planck Function Data', fontsize='medium', style='italic')
-        self.ax2.set_xlabel('Wavelength / nm')
-        self.ax3.set_ylabel("Planck Function / a.u.")
+        self.ax2.set_title('Planck Function Data', fontsize='13', style='italic', weight="bold")
+        self.ax2.set_xlabel('Wavelength [nm]', fontsize= 13)
+        self.ax3.set_ylabel("Planck Function [a.u.]", fontsize= 13)
         #self.ax2.set_yticks([])
         self.ax2.set_yticks([0.1, 0.3, 0.5, 0.7, 0.9])
         
-        self.ax3.set_title('Wien Function Data', fontsize='medium', style='italic')
-        self.ax3.set_xlabel(r'1/Wavelength / m$^{-1}$')
-        self.ax3.set_ylabel("Wien Function")
+        self.ax3.set_title('Wien Function Data', fontsize='13', style='italic', weight="bold")
+        self.ax3.set_xlabel(r'1/Wavelength [m$^{-1}$]', fontsize= 13)
+        self.ax3.set_ylabel("Wien Function", fontsize= 13)
         self.ax3.set_yticks([])
         
-        self.ax4.set_title('Sliding Two-Colour Function', fontsize='medium', style='italic')
-        self.ax4.set_xlabel('Wavelength  / nm')
-        self.ax4.set_ylabel('Temperature / K')
+        self.ax4.set_title('Two-Colour Plot', fontsize='13', style='italic', weight="bold")
+        self.ax4.set_xlabel('Wavelength  [nm]', fontsize= 13)
+        self.ax4.set_ylabel('Temperature [K]', fontsize= 13)
         self.ax4.grid(True, linestyle='-')
         
         
         
-        self.ax5.set_title('Histogram (from Two-Colour Function)', fontsize='medium', style='italic')
-        self.ax5.set_xlabel('Temperature / K')
-        self.ax5.set_ylabel('Counts / a.u.')
+        self.ax5.set_title('Two-colour Histogram', fontsize='13', style='italic', weight="bold")
+        self.ax5.set_xlabel('Temperature [K]', fontsize= 13)
+        self.ax5.set_ylabel('Counts [a.u.]', fontsize= 13)
      
-        self.ax6.set_ylabel('Wien Residual', color='g')
+        self.ax6.set_ylabel('Wien Residual', color='g', fontsize= 13)
         self.updatePlots(redraw=False)
         
         #ax1 = calibration and raw spectrum
