@@ -153,9 +153,18 @@ class LuckyCalculations(object): #TODO Make calcs use calcserv to get bulbTemp, 
         self.wienData = self.wien(self.dataSet[0], self.dataSet[2])
         self.wienDataIntegLim = self.wienData[self.intConf[0]:self.intConf[1]]
         self.twoColData = self.twoColour(self.dataSet[0], self.dataSet[2], self.intConf[2])
-        self.twoColDataLim = self.twoColData[self.intConf[0]:self.intConf[1]]
-        self.twoColHistFreq, self.twoColHistValues = np.histogram(self.twoColDataLim, bins=range(1500,5000,1), density=False)
-        self.twoColHistValues = np.delete(self.twoColHistValues, len(self.twoColHistFreq), 0)
+        self.twoColDataLim = self.twoColData[self.intConf[0]:self.intConf[1]] #twoColData limited between the integration boundaries
+        #modifica
+       
+        self.a = int(round(min(self.twoColDataLim)))
+        self.b = int(round(max(self.twoColDataLim)))
+        self.binning = range(self.a, self.b, 30)
+        #self.twoColHistFreq, self.twoColHistValues = np.histogram(self.twoColDataLim, bins=np.log(len(self.twoColDataLim))/np.log(2)+4], density=False)
+        self.twoColHistFreq, self.twoColHistValues = np.histogram(self.twoColDataLim, bins= self.binning, density=False)
+        
+        #old
+        #self.twoColHistFreq, self.twoColHistValues = np.histogram(self.twoColDataLim, bins=range(1500,5000,1), density=False)
+        #self.twoColHistValues = np.delete(self.twoColHistValues, len(self.twoColHistFreq), 0)
         
         #Do fits
         self.fitPlanck()
@@ -170,6 +179,13 @@ class LuckyCalculations(object): #TODO Make calcs use calcserv to get bulbTemp, 
         self.planckEmiss = self.planckFit[0]
         #Planck with fit params(??)
         self.planckFitData = self.planck(self.wlIntegLim, self.planckEmiss, self.planckTemp)
+        
+        #new method defined to operate a sliding average. usefull for the fit Histogram
+    def moving_average(self, a, n=2) :
+        self.ret = np.cumsum(a, dtype=float)
+        self.ret[n:] = self.ret[n:] - self.ret[:-n]
+        return self.ret[n - 1:] / n
+
     
     def fitWien(self):
         #Do some fitting for Wien...
@@ -177,13 +193,25 @@ class LuckyCalculations(object): #TODO Make calcs use calcserv to get bulbTemp, 
         self.wienFit, wienCov = curve_fit(self.fWien, self.invWLIntegLim[(np.isfinite(self.wienDataIntegLim))], self.wienDataIntegLim[(np.isfinite(self.wienDataIntegLim))], p0=[1, self.planckTemp])
         self.wienResidual = self.wienDataIntegLim - self.fWien(self.invWLIntegLim[(np.isfinite(self.wienDataIntegLim))], *self.wienFit)
         self.wienTemp = self.wienFit[1]
-    
+        
     def fitHistogram(self):
         #Gaussian fit of two colour histogram
         ###
-        self.histFit, histCov = curve_fit(self.gaus, self.twoColHistValues, self.twoColHistFreq, p0=[1000,self.planckTemp,100])
+        #print('averaged twocolhistvalues:')
+        #print self.moving_average(self.twoColHistValues)
+        self.histFit, histCov = curve_fit(self.gaus, self.moving_average(self.twoColHistValues), self.twoColHistFreq, p0=[1000,self.planckTemp,100])
         self.twoColTemp = self.histFit[1]
         self.twoColErr = self.histFit[2]
+    
+    #old
+    #def fitHistogram(self):
+        #Gaussian fit of two colour histogram
+        ###
+        #self.histFit, histCov = curve_fit(self.gaus, self.twoColHistValues, self.twoColHistFreq, p0=[1000,self.planckTemp,100])
+        #self.twoColTemp = self.histFit[1]
+        #self.twoColErr = self.histFit[2]
+    
+    
     
     #Planck function
     def planck(self, wavelength, emiss, temp):
@@ -243,7 +271,7 @@ class LuckyPlots(object):
         self.luckyCalcs = calcs
         
         self.fig = plt.figure(self.luckyCalcs.label)
-        self.fig.suptitle(self.luckyCalcs.label, fontsize="16", weight="bold")
+        self.fig.suptitle(self.luckyCalcs.label, fontsize="16", weight="bold", color = 'b')
         self.ax1 = self.fig.add_subplot(3, 2, 1)#Raw+Calib
         self.ax2 = self.fig.add_subplot(3, 2, 3)#Planck
         self.ax3 = self.fig.add_subplot(3, 2, 4)#Wien
@@ -257,31 +285,41 @@ class LuckyPlots(object):
         plt.subplots_adjust(wspace=0.3, hspace=0.7)
         
         #One-time configuration of plots
-        self.ax1.set_title('Raw (blue) & Calibration Data (green)', fontsize='medium', style='italic')
-        self.ax1.set_xlabel('Wavelength / nm')
+        self.ax1.set_title('Raw (blue) & Calibration Data (green)', fontsize= 13, style='italic', weight="bold")
+        self.ax1.set_xlabel('Wavelength [nm]', fontsize= 13)
         self.ax1.grid(True, linestyle='-')
         
-        self.ax2.set_title('Planck Function Data', fontsize='medium', style='italic')
-        self.ax2.set_xlabel('Wavelength / nm')
-        self.ax2.set_yticks([])
+        self.ax2.set_title('Planck Function Data', fontsize='13', style='italic', weight="bold")
+        self.ax2.set_xlabel('Wavelength [nm]', fontsize= 13)
+        self.ax3.set_ylabel("Planck Function [a.u.]", fontsize= 13)
+        #self.ax2.set_yticks([])
+        self.ax2.set_yticks([0.1, 0.3, 0.5, 0.7, 0.9])
         
-        self.ax3.set_title('Wien Function Data', fontsize='medium', style='italic')
-        self.ax3.set_xlabel(r'1/Wavelength / m$^{-1}$')
-        self.ax3.set_ylabel("Wien Function")
+        self.ax3.set_title('Wien Function Data', fontsize='13', style='italic', weight="bold")
+        self.ax3.set_xlabel(r'1/Wavelength [m$^{-1}$]', fontsize= 13)
+        self.ax3.set_ylabel("Wien Function", fontsize= 13)
         self.ax3.set_yticks([])
         
-        self.ax4.set_title('Sliding Two-Colour Function', fontsize='medium', style='italic')
-        self.ax4.set_xlabel('Wavelength  / nm')
-        self.ax4.set_ylabel('Temperature / K')
+        self.ax4.set_title('Two-Colour Plot', fontsize='13', style='italic', weight="bold")
+        self.ax4.set_xlabel('Wavelength  [nm]', fontsize= 13)
+        self.ax4.set_ylabel('Temperature [K]', fontsize= 13)
         self.ax4.grid(True, linestyle='-')
         
-        self.ax5.set_title('Histogram (from Two-Colour Function)', fontsize='medium', style='italic')
-        self.ax5.set_xlabel('Temperature / K')
-        self.ax5.set_ylabel('Counts / a.u.')
-     
-        self.ax6.set_ylabel('Wien Residual', color='g')
         
+        
+        self.ax5.set_title('Two-colour Histogram', fontsize='13', style='italic', weight="bold")
+        self.ax5.set_xlabel('Temperature [K]', fontsize= 13)
+        self.ax5.set_ylabel('Counts [a.u.]', fontsize= 13)
+     
+        self.ax6.set_ylabel('Wien Residual', color='g', fontsize= 13)
         self.updatePlots(redraw=False)
+        
+        #ax1 = calibration and raw spectrum
+        #ax2 = planck spectrum
+        #ax3 = wien
+        #ax4 = 2-col
+        #ax5 =histogram
+        #ax6 = residuals in subplot (3,2,4)
          
         if not self.debug:
             #Draw the plots if we're not debugging
@@ -299,29 +337,43 @@ class LuckyPlots(object):
 #        self.ax1.set_ylim(0,50000) #TODO Get max fn.
         
         #Planck data subgraph
-        self.ax2.plot(self.luckyCalcs.dataSet[0], self.luckyCalcs.dataSet[2], 
-                 self.luckyCalcs.wlIntegLim, self.luckyCalcs.planckFitData, 'red')
+        #self.ax2.plot(self.luckyCalcs.dataSet[0], self.luckyCalcs.dataSet[2], 
+         #        self.luckyCalcs.wlIntegLim, self.luckyCalcs.planckFitData, 'red')
+        #self.ax2.set_xlim(*self.luckyCalcs.planckPlotRange)
+             #Planck data subgraph
+        self.ax2.plot(self.luckyCalcs.dataSet[0], self.luckyCalcs.dataSet[2] / max(self.luckyCalcs.dataSet[2]), 
+                 self.luckyCalcs.wlIntegLim, self.luckyCalcs.planckFitData / max(self.luckyCalcs.dataSet[2]), 'red')
         self.ax2.set_xlim(*self.luckyCalcs.planckPlotRange)
-          
+        self.ax2.set_ylim([0, 1])
+      
         #Wien data subgraph
         self.ax3.plot(self.luckyCalcs.invWL, self.luckyCalcs.wienData,
                  self.luckyCalcs.invWLIntegLim, self.luckyCalcs.fWien(self.luckyCalcs.invWLIntegLim,*self.luckyCalcs.wienFit), 'red')
         self.ax3.set_xlim(*self.luckyCalcs.wienPlotRange)
         #Two Colour data subgraph
-        self.ax4.plot(self.luckyCalcs.dataSet[0], self.luckyCalcs.twoColData, 
-                 self.luckyCalcs.wlIntegLim, self.luckyCalcs.twoColDataLim, 'red')
+        self.ax4.plot(self.luckyCalcs.dataSet[0], self.luckyCalcs.twoColData, 'b:', 
+                 self.luckyCalcs.wlIntegLim, self.luckyCalcs.twoColDataLim, 'r:')
         self.ax4.set_xlim(*self.luckyCalcs.planckPlotRange)
         #self.ax4.set_ylim([np.amin(calcs.TwoColDataLim),np.amax(calcs.TwoColDataLim)])
         #self.ax4.set_ylim(*calcs.twoColDataLim)
-        self.ax4.set_ylim(1500,4000)
+        #nuova modifica
+        self.ax4.set_ylim(self.luckyCalcs.twoColTemp - 500, self.luckyCalcs.twoColTemp + 500)
         
         #Histogram subgraph
-        self.ax5.plot(self.luckyCalcs.twoColHistValues, self.luckyCalcs.twoColHistFreq,
-                 self.luckyCalcs.twoColHistValues, self.luckyCalcs.gaus(self.luckyCalcs.twoColHistValues, *self.luckyCalcs.histFit), 'red')
+        #old
+        #self.ax5.plot(self.luckyCalcs.twoColHistValues, self.luckyCalcs.twoColHistFreq,
+        #         self.luckyCalcs.twoColHistValues, self.luckyCalcs.gaus(self.luckyCalcs.twoColHistValues, *self.luckyCalcs.histFit), 'red')
+        #modifica
+        self.ax5.hist(self.luckyCalcs.twoColDataLim, self.luckyCalcs.binning)
+        self.ax5.plot(self.luckyCalcs.twoColHistValues, self.luckyCalcs.gaus(self.luckyCalcs.twoColHistValues, *self.luckyCalcs.histFit), 'red')
+        
+        #
+        self.ax5.set_xlim([self.luckyCalcs.twoColTemp - 400, self.luckyCalcs.twoColTemp + 400])
         #self.ax5.set_xlim(1800,4000)
         #Residual subgraph of the Wien
         ordin = len(self.luckyCalcs.invWL)*[0]
         self.ax6.plot(self.luckyCalcs.invWLIntegLim, self.luckyCalcs.wienResidual,'green',self.luckyCalcs.invWL,ordin,'black')
+       
         
         #Create text label for calculated T values  -OLD-
         #textLabel = OrderedDict([("T"+r"$_{Planck}$","{0:10.2f}".format(self.luckyCalcs.planckTemp)),
