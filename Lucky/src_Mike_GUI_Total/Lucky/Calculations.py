@@ -323,21 +323,48 @@ class LuckyPlots(object):
         ordin = len(self.luckyCalcs.invWL)*[0]
         self.ax6.plot(self.luckyCalcs.invWLIntegLim, self.luckyCalcs.wienResidual,'green',self.luckyCalcs.invWL,ordin,'black')
         
-        #Create text label for calculated T values
-        textLabel = OrderedDict([("T"+r"$_{Planck}$","{0:10.2f}".format(self.luckyCalcs.planckTemp)),
-                                 ("T"+r"$_{Wien}$","{0:10.2f}".format(self.luckyCalcs.wienTemp)),
-                                 ("T"+r"$_{Two Colour}$","{0:10.2f}".format(self.luckyCalcs.twoColTemp))]) 
-        
+        #Create text label for calculated T values  -OLD-
+        #textLabel = OrderedDict([("T"+r"$_{Planck}$","{0:10.2f}".format(self.luckyCalcs.planckTemp)),
+         #                        ("T"+r"$_{Wien}$","{0:10.2f}".format(self.luckyCalcs.wienTemp)),
+          #                       ("T"+r"$_{Two Colour}$","{0:10.2f}".format(self.luckyCalcs.twoColTemp))]) 
+    
+     #Create text label for calculated T values -modified-
+        textLabel = OrderedDict([("T"+r"$_{Planck}$" + "[K]","{0:9d}".format(int(self.luckyCalcs.planckTemp))),
+                                 ("T"+r"$_{Wien}$"+ "[K]","{0:9d}".format(int(self.luckyCalcs.wienTemp))),
+                                 ("T"+r"$_{2col}$"+ "[K]","{0:9d}".format(int(self.luckyCalcs.twoColTemp)))]) 
+    
+        self.errWienPlanck = (abs(self.luckyCalcs.planckTemp - self.luckyCalcs.wienTemp)/ (self.luckyCalcs.planckTemp))*100 
+        self.std2col = self.luckyCalcs.twoColErr
+        textLabel1 = OrderedDict([
+                                 ("ERR"+"$_{2col}$"+ "[K]","{0:9d}".format(int(self.std2col))),
+                                 ("ERR"+"$_{W-P}$","{0:9.2f}".format(self.errWienPlanck))
+                                 ])     
+    
 #         {"T"+r"$_{Planck}$" : "{0:10.2f}".format(self.luckyCalcs.planckTemp),
 #                      "T"+r"$_{Wien}$" : "{0:10.2f}".format(self.luckyCalcs.wienTemp),
 #                      "T"+r"$_{Two Colour}$":"{0:10.2f}".format(self.luckyCalcs.twoColTemp)}
-        labelPosition = (0.6, 0.85)
+        labelPosition = (0.54, 0.85)
         rowNr = 0
         for label,tVal in textLabel.iteritems( ):
             plt.figtext(labelPosition[0], labelPosition[1]-(0.05*rowNr), label, fontdict = None, size = 'large')
-            plt.figtext(labelPosition[0]+0.095, labelPosition[1]-(0.05*rowNr), tVal, fontdict = None, size = 'large')
+            plt.figtext(labelPosition[0]+0.080, labelPosition[1]-(0.05*rowNr), tVal, fontdict = None, size = 'large')
             rowNr += 1
-
+        
+        labelPosition1 = (0.78, 0.85)
+        rowNr = 0
+    
+        for label,tVal in textLabel1.iteritems( ):
+            if self.errWienPlanck < 1 or rowNr == 0 :
+                plt.figtext(labelPosition1[0], labelPosition1[1]-(0.05*rowNr), label, fontdict = None, size = 'large')
+                plt.figtext(labelPosition1[0]+0.080, labelPosition1[1]-(0.05*rowNr), tVal, fontdict = None, size = 'large')
+            else:
+                plt.figtext(labelPosition1[0], labelPosition1[1]-(0.05*rowNr), label, fontdict = None, size = 'large')
+                plt.figtext(labelPosition1[0]+0.080, labelPosition1[1]-(0.05*rowNr), tVal, fontdict = None, size = 'large', color = 'r')
+            
+            rowNr += 1
+            
+        
+        
         
         if redraw and not self.debug:
             plt.draw()
